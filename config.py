@@ -22,4 +22,4 @@ def random_sleep():
 
 
 def random_sleep_short():
-    time.sleep(random.uniform(2, 8))  # 这里配置延迟 现在是1到2.5秒的延迟.防止爬虫太快
+    time.sleep(random.uniform(2, 2.1))  # 这里配置延迟 现在是1到2.5秒的延迟.防止爬虫太快

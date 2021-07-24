@@ -2,6 +2,7 @@ import multiprocessing
 import asyncio
 from WebFetch import fetch, update
 import utils.Queue
+import time as T
 from config import random_sleep
 
 
@@ -11,8 +12,11 @@ class Arranger(multiprocessing.Process):
         self.queue = queue  # 这个是等待队列,这里都是第一次
         self.update_queue = utils.Queue.Queue()  # 这里是更新队列,等待更新的
         self.update_queue_quick = utils.Queue.Queue()  # 紧急更新队列
+        self.time = 0
+        self.count = 0
 
     async def new_post(self):
+        start_time = T.time()
         u1, u2, u3, u4 = self.queue.get(), self.queue.get(), self.queue.get(), self.queue.get()
         print(f'取出帖子{u1} {u2} {u3} {u4}')
         p1, p2, p3, p4 = await asyncio.gather(fetch(u1), fetch(u2), fetch(u3), fetch(u4),)
@@ -30,6 +34,10 @@ class Arranger(multiprocessing.Process):
                 self.update_queue.put(url)
             else:  # 当flag为0时是被锁了
                 pass
+
+        # 记录时间
+        self.time += (T.time() - start_time)
+        self.count += 4
 
     async def update_post(self):
         if self.update_queue.qsize() >= 4:
@@ -72,6 +80,7 @@ class Arranger(multiprocessing.Process):
                 asyncio.run(self.new_post())
                 # 更新帖子
                 asyncio.run(self.update_post())
+                print(f"平均每个帖子用时{self.time / self.count}s")
             else:
                 print("更新帖子")
                 # 如果队列里没有帖子直接更新帖子
