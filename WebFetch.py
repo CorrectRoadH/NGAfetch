@@ -3,7 +3,7 @@ import httpx
 import re
 from config import cookies, random_sleep, random_sleep_short
 from text import is_will_be_deleted
-
+import utils.SQL
 
 async def fetch(url):
     # 打开网页
@@ -11,6 +11,7 @@ async def fetch(url):
         r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=cookies)
     # 解析
     # 处理帖子名
+
     try:
         title = re.findall(r'<title>(.+) NGA玩家社区</title>', r.text)
     except UnicodeDecodeError:
@@ -19,9 +20,12 @@ async def fetch(url):
 
     # todo 判断是不是被锁了,如果被锁了就不需要更新了
     print(f'标题:{title}')
+    sql = utils.SQL.SQL()
+    sql.insert(url, None, title[0])
     count = 1
     last_floods = [-1]
     flag = False  # 敏感词的flag
+
     while True:
         r = None
         try:
@@ -56,6 +60,7 @@ async def fetch(url):
 
             # todo 插入数据库
             # print(f'楼层:{flood_num} 内容:{context}')
+            sql.update_reply(url, flood_num[0], None, context[0])
             last_floods = floods
         count += 1
         random_sleep_short()  # 这里停止一下,不太爬太快,如果不要延时不要删这里,在config.py里改区间
