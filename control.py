@@ -77,11 +77,13 @@ class Arranger(multiprocessing.Process):
         while True:
             if self.queue.qsize() >= 4:  # 这样设置的就不会阻塞一定要有4个帖子才抓取与更新
                 # 获取新的帖子
-                print("抓取帖子")
                 asyncio.run(self.new_post())
                 # 更新帖子
-                asyncio.run(self.update_post())
                 print(f"平均每个帖子用时{self.time / self.count}s")
+
+                # 那现在问题就是前期需要抓的时候,抓8个才更新4个.
+                if self.queue.qsize() < self.update_queue.qsize():
+                    asyncio.run(self.update_post())
             else:
                 print("更新帖子")
                 # 如果队列里没有帖子直接更新帖子

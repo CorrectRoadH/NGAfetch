@@ -44,9 +44,17 @@ class SQL:
         cursor.execute(sql)
         self.db.commit()
 
+    def get_reply_latest(self, post_id, flood_num):
+        cursor = self.db.cursor()
+        sql = f'select context from reply where `post_id`={post_id} and `flood_num`={flood_num};'
+        cursor.execute(sql)
+        results = cursor.fetchall()[-1][0]
+        return results
+
 
 if __name__ == '__main__':
     mysql = SQL()
     # mysql.update_reply(3244, 0,None,"我是你爹2")
     # mysql.insert(3244,None,"Fuck")
+    print(mysql.get_reply_latest(27761015,3))
 
