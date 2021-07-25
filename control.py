@@ -3,7 +3,8 @@ import asyncio
 from WebFetch import fetch, update
 import utils.Queue
 import time as T
-from config import random_sleep
+from config import random_sleep, random_sleep_short
+
 
 
 class Arranger(multiprocessing.Process):
@@ -88,3 +89,4 @@ class Arranger(multiprocessing.Process):
                     self.update_queue_quick()
                 else:
                     print("没有帖子需要紧急更新")
+            random_sleep_short()

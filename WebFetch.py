@@ -7,7 +7,8 @@ from text import is_will_be_deleted
 
 async def fetch(url):
     # 打开网页
-    r = httpx.get(f"https://bbs.nga.cn/read.php?tid={url}&page=1", cookies=cookies)
+    async with httpx.AsyncClient() as client:
+        r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=cookies)
     # 解析
     # 处理帖子名
     try:
@@ -22,7 +23,13 @@ async def fetch(url):
     last_floods = [-1]
     flag = False  # 敏感词的flag
     while True:
-        r = httpx.get(f"https://bbs.nga.cn/read.php?tid={url}&page={count}", cookies=cookies)
+        r = None
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}&page={count}", cookies=cookies)
+        except httpx.ConnectTimeout:
+            print(f"帖子{url}第{count}页 访问超时,启用备用手段")
+            r = httpx.get('https://bbs.nga.cn/read.php?tid={url}&page={count}', cookies=cookies)
         # 楼层处理
         try:
             floods = re.findall(r'<tr id=\'post1strow.+\' class=\'postrow row.\'>(?:.|\n)*?</tr>', r.text)
@@ -34,7 +41,7 @@ async def fetch(url):
             if floods[0] == last_floods[0]:  # 如果两页相同说明,上一页是最后一页了|但是有个问题,如果前一页有楼被删之类的,还会相同吗?
                 break
             else:
-                print(f"第{count}页")
+                print(f"{title} 第{count}页")
         except IndexError:
             print(f'楼层出错{floods}')  # 就当被锁了,不能更新,不对阿,这是抓取怎么过期呢,想想有可能哦.要是抓一半被锁了呢.
             print(f'https://bbs.nga.cn/read.php?tid={url}&page={count}')
