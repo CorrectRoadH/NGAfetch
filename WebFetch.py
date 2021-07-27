@@ -138,14 +138,15 @@ async def update(url):
             print(f'https://bbs.nga.cn/read.php?tid={url}&page={count}')
 
         for flood in floods:
-            flood_num = re.findall(r'<tr id=\'post1strow(.+)\' class=\'postrow row.\'>(?:.|\n)*</tr>', flood)
-            context = re.findall(r'<span id=\'postcontent.+\' class=\'postcontent ubbcode\'>(.+)</span>', flood)
-            if not context:  # 首楼不是<span>而是<p>
-                context = re.findall(r'<p id=\'postcontent0\' class=\'postcontent ubbcode\'>(.+)</p>', flood)
-            # 敏感词匹配
-            flag = True if is_will_be_deleted(context) else flag
+            if "<h4 class='silver subtitle'>改动</h4>" in flood:  # 说明这一层有改动
 
-            if "改动" in flood:  # 说明这一层有改动
+                flood_num = re.findall(r'<tr id=\'post1strow(.+)\' class=\'postrow row.\'>(?:.|\n)*</tr>', flood)
+                context = re.findall(r'<span id=\'postcontent.+\' class=\'postcontent ubbcode\'>(.+)</span>', flood)
+                if not context:  # 首楼不是<span>而是<p>
+                    context = re.findall(r'<p id=\'postcontent0\' class=\'postcontent ubbcode\'>(.+)</p>', flood)
+                # 敏感词匹配
+                flag = True if is_will_be_deleted(context) else flag
+
                 if sql.get_reply_latest(url, flood_num[0]) != context:
                     print(f'出现改动情况!!!~~~帖子:{url}楼层:{flood_num[0]}')
                     sql.update_reply(url, flood_num[0], None, context[0])
