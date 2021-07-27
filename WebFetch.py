@@ -10,8 +10,16 @@ import utils.User
 async def fetch(url):
     user = utils.User.User()
     # 打开网页
-    async with httpx.AsyncClient() as client:
-        r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=user.cookies, headers=user.header)
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=user.cookies, headers=user.header)
+    except httpx.ConnectTimeout:
+        print(f"帖子{url} 访问超时,启用备用手段")
+        r = httpx.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=user.cookies, headers=user.header)
+    except httpx.ProxyError:
+        print(f"帖子{url} 访问 代理错误,启用备用手段")
+        r = httpx.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=user.cookies, headers=user.header)
+
     # 解析
     # 处理帖子名
 
@@ -36,7 +44,11 @@ async def fetch(url):
                 r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}&page={count}", cookies=user.cookies, headers=user.header)
         except httpx.ConnectTimeout:
             print(f"帖子{url}第{count}页 访问超时,启用备用手段")
-            r = httpx.get('https://bbs.nga.cn/read.php?tid={url}&page={count}', cookies=user.cookies, headers=user.header)
+            r = httpx.get(f'https://bbs.nga.cn/read.php?tid={url}&page={count}', cookies=user.cookies, headers=user.header)
+        except httpx.ProxyError:
+            print(f"帖子{url}第{count}页 代理错误,启用备用手段")
+            r = httpx.get(f'https://bbs.nga.cn/read.php?tid={url}&page={count}', cookies=user.cookies, headers=user.header)
+
         # 楼层处理
         try:
             floods = re.findall(r'<tr id=\'post1strow.+\' class=\'postrow row.\'>(?:.|\n)*?</tr>', r.text)

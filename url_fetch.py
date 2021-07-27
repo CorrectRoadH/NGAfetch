@@ -20,7 +20,7 @@ class UrlFetcher(multiprocessing.Process):
             try:
                 posts = re.findall(r'<a href=\'/read\.php\?tid=(.*)\' id=\'t_tt1_.*\' class=\'topic\'>.*</a>', r.text)
             except UnicodeDecodeError:
-                print(r)
+                continue
 
             # print(posts)
             for post in posts:

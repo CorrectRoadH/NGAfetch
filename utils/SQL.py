@@ -48,7 +48,12 @@ class SQL:
         cursor = self.db.cursor()
         sql = f'select context from reply where `post_id`={post_id} and `flood_num`={flood_num};'
         cursor.execute(sql)
-        results = cursor.fetchall()[-1][0]
+        try:
+            results = cursor.fetchall()[-1][0]
+        except IndexError:
+            # 可能的原因,第一次抓取的时候没有.然后update的之前,他发了还编辑了
+            print(f"特殊Bug,sql{sql}")
+            results = ""
         return results
 
 
