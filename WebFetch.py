@@ -4,12 +4,14 @@ import re
 from config import cookies, random_sleep_short
 from text import is_will_be_deleted
 import utils.SQL
+import utils.User
 
 
 async def fetch(url):
+    user = utils.User.User()
     # 打开网页
     async with httpx.AsyncClient() as client:
-        r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=cookies)
+        r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=user.cookies, headers=user.header)
     # 解析
     # 处理帖子名
 
@@ -31,10 +33,10 @@ async def fetch(url):
         r = None
         try:
             async with httpx.AsyncClient() as client:
-                r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}&page={count}", cookies=cookies)
+                r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}&page={count}", cookies=user.cookies, headers=user.header)
         except httpx.ConnectTimeout:
             print(f"帖子{url}第{count}页 访问超时,启用备用手段")
-            r = httpx.get('https://bbs.nga.cn/read.php?tid={url}&page={count}', cookies=cookies)
+            r = httpx.get('https://bbs.nga.cn/read.php?tid={url}&page={count}', cookies=user.cookies, headers=user.header)
         # 楼层处理
         try:
             floods = re.findall(r'<tr id=\'post1strow.+\' class=\'postrow row.\'>(?:.|\n)*?</tr>', r.text)
@@ -70,8 +72,10 @@ async def fetch(url):
 
 
 async def update(url):
+    user = utils.User.User()
+
     async with httpx.AsyncClient() as client:
-        r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=cookies)
+        r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=user.cookies, headers=user.header)
     # 解析
     # 处理帖子名
 
@@ -82,7 +86,7 @@ async def update(url):
         return 2, url
 
     if not title:  # 判断被锁与特殊情况.
-        title = re.findall(r'<title>(.+)</title>',r.text)
+        title = re.findall(r'<title>(.+)</title>', r.text)
         if title[0] == "找不到主题":
             return 0, url
         elif title[0] == "帖子审核未通过":
@@ -101,10 +105,10 @@ async def update(url):
         r = None
         try:
             async with httpx.AsyncClient() as client:
-                r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}&page={count}", cookies=cookies)
+                r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}&page={count}", cookies=user.cookies, headers=user.header)
         except httpx.ConnectTimeout:
             print(f"帖子{url}第{count}页 访问超时,启用备用手段")
-            r = httpx.get('https://bbs.nga.cn/read.php?tid={url}&page={count}', cookies=cookies)
+            r = httpx.get('https://bbs.nga.cn/read.php?tid={url}&page={count}', cookies=user.cookies, headers=user.header)
         # 楼层处理
         try:
             floods = re.findall(r'<tr id=\'post1strow.+\' class=\'postrow row.\'>(?:.|\n)*?</tr>', r.text)

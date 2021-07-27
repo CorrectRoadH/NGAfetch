@@ -3,16 +3,20 @@ import httpx
 import re
 from config import cookies, random_sleep
 import utils.fetch
+import utils.User
 
 
 class UrlFetcher(multiprocessing.Process):
+
     def __init__(self, queue):
         multiprocessing.Process.__init__(self)
         self.queue = queue
 
     def run(self):
+        user = utils.User.User()
+
         while True:
-            r = httpx.get('https://bbs.nga.cn/thread.php?fid=-7', cookies=cookies)
+            r = httpx.get('https://bbs.nga.cn/thread.php?fid=-7', cookies=user.cookies, headers=user.header)
             try:
                 posts = re.findall(r'<a href=\'/read\.php\?tid=(.*)\' id=\'t_tt1_.*\' class=\'topic\'>.*</a>', r.text)
             except UnicodeDecodeError:

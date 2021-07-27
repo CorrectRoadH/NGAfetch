@@ -4,7 +4,23 @@ from WebFetch import fetch, update
 import utils.Queue
 import time as T
 from config import random_sleep, random_sleep_short
+import yappi
+from yappi import get_func_stats, COLUMNS_FUNCSTATS
+import os
+import sys
 
+
+def print_all(stats, out, limit=None):
+    if stats.empty():
+        return
+    sizes = [36, 5, 8, 8, 8]
+    columns = dict(zip(range(len(COLUMNS_FUNCSTATS)), zip(COLUMNS_FUNCSTATS, sizes)))
+    show_stats = stats
+    if limit:
+        show_stats = stats[:limit]
+    out.write(os.linesep)
+    for stat in show_stats:
+        stat._print(out, columns)
 
 
 class Arranger(multiprocessing.Process):
@@ -72,6 +88,8 @@ class Arranger(multiprocessing.Process):
             pass
 
     def run(self):
+        yappi.start()
+
         # 这里逻辑要怎么写呢?因为没有东西时是阻塞.
         # 这里不能这样,不然就是抓取4个帖子然后更新4个帖子,这不合适.更新和抓取不是同步的.
         while True:
@@ -92,3 +110,12 @@ class Arranger(multiprocessing.Process):
                 else:
                     print("没有帖子需要紧急更新")
             random_sleep_short()
+            # Stats sorted by total time
+            stats = get_func_stats().sort(
+                sort_type='totaltime', sort_order='desc')
+            # returns all stats with sorting applied
+
+            print_all(stats, sys.stdout, limit=10)
+
+
+
