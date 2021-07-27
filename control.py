@@ -24,11 +24,11 @@ def print_all(stats, out, limit=None):
 
 
 class Arranger(multiprocessing.Process):
-    def __init__(self, queue):
+    def __init__(self, queue, update_queue, update_queue_quick):
         multiprocessing.Process.__init__(self)
         self.queue = queue  # 这个是等待队列,这里都是第一次
-        self.update_queue = utils.Queue.Queue()  # 这里是更新队列,等待更新的
-        self.update_queue_quick = utils.Queue.Queue()  # 紧急更新队列
+        self.update_queue = update_queue  # 这里是更新队列,等待更新的
+        self.update_queue_quick = update_queue_quick  # 紧急更新队列
         self.time = 0
         self.count = 0
 
