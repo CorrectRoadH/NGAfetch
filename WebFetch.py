@@ -26,13 +26,22 @@ async def fetch(url):
     try:
         title = re.findall(r'<title>(.+) NGA玩家社区</title>', r.text)
     except UnicodeDecodeError:
-        print(f'{url}帖子已经遇到gbk解析出错,已返回')
+        if not title:  # 判断被锁与特殊情况.
+            title = re.findall(r'<title>(.+)</title>', r.text)
+            if title[0] == "找不到主题":
+                return 0, url
+            elif title[0] == "帖子审核未通过": # 这种情况下连原来的数据都没有抓到也没有保存的必要了.
+                return 0, url
+            else:
+                print(f"特殊情况!!!{title}")
+                print(f'{url}帖子已经遇到gbk解析出错,已返回')
+                return 0, url
         return 2, url
 
-    # todo 判断是不是被锁了,如果被锁了就不需要更新了
     print(f'标题:{title}')
     sql = utils.SQL.SQL()
-    sql.insert(url, None, title[0])
+    # sql.insert(url, None, title[0])
+    #todo 这里要改一下,插入帖子的时候插入时间
     count = 1
     last_floods = [-1]
     flag = False  # 敏感词的flag
@@ -69,11 +78,14 @@ async def fetch(url):
             flood_num = re.findall(r'<tr id=\'post1strow(.+)\' class=\'postrow row.\'>(?:.|\n)*</tr>', flood)
             context = re.findall(r'<span id=\'postcontent.+\' class=\'postcontent ubbcode\'>(.+)</span>', flood)
             if not context:  # 首楼不是<span>而是<p>
-                context = re.findall(r'<p id=\'postcontent0\' class=\'postcontent ubbcode\'>(.+)</p>', flood)
+                context = re.findall(r"<p id='postcontent0' class='postcontent ubbcode'>(.+)</p>", flood)
+
+            time = re.findall(r'<span id=\'postdate.+\' title=\'reply time\'>(.+)</span>', flood)
+            author = re.findall(r"<a href='nuke.php\?func=ucp&uid=(.+)' id='postauthor.+' class='author b'>", flood)
             # 敏感词匹配
             flag = True if is_will_be_deleted(context) else flag
 
-            sql.update_reply(url, flood_num[0], None, context[0])
+            sql.update_reply(url, flood_num[0], time[0], context[0], author[0])
             last_floods = floods
         count += 1
         random_sleep_short()  # 这里停止一下,不太爬太快,如果不要延时不要删这里,在config.py里改区间
@@ -90,6 +102,7 @@ async def update(url):
         r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=user.cookies, headers=user.header)
     # 解析
     # 处理帖子名
+    sql = utils.SQL.SQL()
 
     try:
         title = re.findall(r'<title>(.+) NGA玩家社区</title>', r.text)
@@ -100,15 +113,20 @@ async def update(url):
     if not title:  # 判断被锁与特殊情况.
         title = re.findall(r'<title>(.+)</title>', r.text)
         if title[0] == "找不到主题":
+            sql.update_post_state(url, 2)
             return 0, url
         elif title[0] == "帖子审核未通过":
+            sql.update_post_state(url, 3)
             return 0, url
         else:
+            sql.update_post_state(url, 4)
             print(f"特殊情况!!!{title}")
             return 0, url
+        return 0, url
+    # 现在出现一个 标题:[],但为什么没有上面捕捉到.这是为什么呢? 我现在加一个超级特别情况,看看会不会被捕捉.估计是访问频率太高,被抓到了.
+    # 现在有思路了,可能是第一次抓取的时候就遇到了锁帖
 
     print(f'标题:{title}')
-    sql = utils.SQL.SQL()
     count = 1
     last_floods = [-1]
     flag = False  # 敏感词的flag
@@ -144,12 +162,15 @@ async def update(url):
                 context = re.findall(r'<span id=\'postcontent.+\' class=\'postcontent ubbcode\'>(.+)</span>', flood)
                 if not context:  # 首楼不是<span>而是<p>
                     context = re.findall(r'<p id=\'postcontent0\' class=\'postcontent ubbcode\'>(.+)</p>', flood)
+                time = re.findall(r'<span id=\'postdate.+\' title=\'reply time\'>(.+)</span>', flood)
+                author = re.findall(r"<a href='nuke.php\?func=ucp&uid=(.+)' id='postauthor.+' class='author b'>", flood)
+
                 # 敏感词匹配
                 flag = True if is_will_be_deleted(context) else flag
 
                 if sql.get_reply_latest(url, flood_num[0]) != context:
                     print(f'出现改动情况!!!~~~帖子:{url}楼层:{flood_num[0]}')
-                    sql.update_reply(url, flood_num[0], None, context[0])
+                    sql.update_reply(url, flood_num[0], time, context[0], author)
             last_floods = floods
         count += 1
         random_sleep_short()  # 这里停止一下,不太爬太快,如果不要延时不要删这里,在config.py里改区间
@@ -160,4 +181,4 @@ async def update(url):
 
 
 if __name__ == '__main__':
-    print(asyncio.run(update("27740179")))
+    print(asyncio.run(fetch(27888343)))
