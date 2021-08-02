@@ -40,7 +40,7 @@ async def fetch(url):
 
     print(f'标题:{title}')
     sql = utils.SQL.SQL()
-    # sql.insert(url, None, title[0])
+    sql.insert(url, None, title[0])
     #todo 这里要改一下,插入帖子的时候插入时间
     count = 1
     last_floods = [-1]
@@ -181,4 +181,4 @@ async def update(url):
 
 
 if __name__ == '__main__':
-    print(asyncio.run(fetch(27888343)))
+    print(asyncio.run(fetch(27888744)))

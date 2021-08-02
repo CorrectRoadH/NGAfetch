@@ -17,12 +17,13 @@ def singleton(cls):
 @singleton
 class SQL:
     def __init__(self):
-        self.db = MySQLdb.connect("192.168.99.100", "root", "hxhl0804", "NGA", charset='utf8')
+        self.db = MySQLdb.connect("0.0.0.0", "root", "hxhl0804", "NGA", charset='utf8')
 
     def insert(self, post_id, time, title):
         cursor = self.db.cursor()
         post_id = int(post_id)
         sql = f'INSERT INTO post (`post_id`, `time`, `title`) VALUES ({post_id}, NULL, "{title}");'
+
         cursor.execute(sql)
         # 提交到数据库执行
         self.db.commit()
@@ -34,13 +35,15 @@ class SQL:
         results = cursor.fetchone()[0]
         return results
 
-    def update_reply(self, post_id, flood_num, time, context):
+    def update_reply(self, post_id, flood_num, time, context, author):
+        print(f"id{post_id} flood{flood_num} time{time} author{author}")
         cursor = self.db.cursor()
         # 缺点查询次数太多了,看看有没有办法少一点.
         edit_count = self.get_reply_num(post_id, flood_num)
         post_id = int(post_id)
         flood_num = int(flood_num)
-        sql = f'INSERT INTO reply (`post_id`, `flood_num`, `edit_count`, `time`, `context`) VALUES ({post_id}, {flood_num}, {edit_count}, NULL, "{context}");'
+        sql = f'INSERT INTO reply (`post_id`, `flood_num`, `edit_count`, `time`, `context`, `author`) VALUES ({post_id}, {flood_num}, {edit_count}, "{time}", "{context}", "{author}");'
+        print(sql)
         cursor.execute(sql)
         self.db.commit()
 
@@ -55,6 +58,9 @@ class SQL:
             print(f"特殊Bug,sql{sql}")
             results = ""
         return results
+
+    def update_post_state(self, post_id, state):
+        pass
 
 
 if __name__ == '__main__':
