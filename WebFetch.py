@@ -22,21 +22,27 @@ async def fetch(url):
 
     # 解析
     # 处理帖子名
-
+    title = []
     try:
         title = re.findall(r'<title>(.+) NGA玩家社区</title>', r.text)
     except UnicodeDecodeError:
-        if not title:  # 判断被锁与特殊情况.
-            title = re.findall(r'<title>(.+)</title>', r.text)
-            if title[0] == "找不到主题":
-                return 0, url
-            elif title[0] == "帖子审核未通过": # 这种情况下连原来的数据都没有抓到也没有保存的必要了.
-                return 0, url
-            else:
-                print(f"特殊情况!!!{title}")
-                print(f'{url}帖子已经遇到gbk解析出错,已返回')
-                return 0, url
+        print(f'{url}帖子已经遇到gbk解析出错,已返回')
         return 2, url
+
+    if not title:  # 判断被锁与特殊情况.
+        title = re.findall(r'<title>(.+)</title>', r.text)
+        if title[0] == "找不到主题":
+            return 0, url
+        elif title[0] == "帖子审核未通过": # 这种情况下连原来的数据都没有抓到也没有保存的必要了.
+            return 0, url
+        else:
+            print(f"特殊情况!!!{title}")
+            print(f'{url}帖子已经遇到gbk解析出错,已返回')
+            return 0, url
+
+    if title == [] and "<!--msginfostart-->帖子发布或回复时间超过限制<!--msginfoend-->" in r.text:
+        print("帖子超时")
+        return 0, url
 
     print(f'标题:{title}')
     sql = utils.SQL.SQL()
@@ -72,7 +78,9 @@ async def fetch(url):
                 print(f"{title} 第{count}页")
         except IndexError:
             print(f'楼层出错{floods}')  # 就当被锁了,不能更新,不对阿,这是抓取怎么过期呢,想想有可能哦.要是抓一半被锁了呢.
-            print(f'https://bbs.nga.cn/read.php?tid={url}&page={count}')
+            # 现在问题已经锁定了,是nga特殊的无页楼层
+            return 2, url
+
 
         for flood in floods:
             flood_num = re.findall(r'<tr id=\'post1strow(.+)\' class=\'postrow row.\'>(?:.|\n)*</tr>', flood)
@@ -126,6 +134,10 @@ async def update(url):
     # 现在出现一个 标题:[],但为什么没有上面捕捉到.这是为什么呢? 我现在加一个超级特别情况,看看会不会被捕捉.估计是访问频率太高,被抓到了.
     # 现在有思路了,可能是第一次抓取的时候就遇到了锁帖
 
+    if title == [] and "<!--msginfostart-->帖子发布或回复时间超过限制<!--msginfoend-->" in r.text:
+        sql.update_post_state(url, 4)
+        return 0, url
+
     print(f'标题:{title}')
     count = 1
     last_floods = [-1]
@@ -153,7 +165,8 @@ async def update(url):
                 print(f"{title} 第{count}页")
         except IndexError:
             print(f'楼层出错{floods}')  # 就当被锁了,不能更新,不对阿,这是抓取怎么过期呢,想想有可能哦.要是抓一半被锁了呢.
-            print(f'https://bbs.nga.cn/read.php?tid={url}&page={count}')
+            # 现在问题已经锁定了,是nga特殊的无页楼层
+            return 2, url
 
         for flood in floods:
             if "<h4 class='silver subtitle'>改动</h4>" in flood:  # 说明这一层有改动
@@ -181,4 +194,4 @@ async def update(url):
 
 
 if __name__ == '__main__':
-    print(asyncio.run(fetch(27888744)))
+    print(asyncio.run(update(27815561)))

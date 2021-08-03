@@ -20,13 +20,15 @@ class SQL:
         self.db = MySQLdb.connect("0.0.0.0", "root", "hxhl0804", "NGA", charset='utf8')
 
     def insert(self, post_id, time, title):
+
         cursor = self.db.cursor()
         post_id = int(post_id)
-        sql = f'INSERT INTO post (`post_id`, `time`, `title`) VALUES ({post_id}, NULL, "{title}");'
+        sql = f'INSERT INTO post (`post_id`, `time`, `title`, `state`) VALUES ({post_id}, NULL, "{title}", 1);'
 
         cursor.execute(sql)
         # 提交到数据库执行
         self.db.commit()
+
 
     def get_reply_num(self, post_id, flood_num):
         cursor = self.db.cursor()
@@ -36,14 +38,12 @@ class SQL:
         return results
 
     def update_reply(self, post_id, flood_num, time, context, author):
-        print(f"id{post_id} flood{flood_num} time{time} author{author}")
         cursor = self.db.cursor()
         # 缺点查询次数太多了,看看有没有办法少一点.
         edit_count = self.get_reply_num(post_id, flood_num)
         post_id = int(post_id)
         flood_num = int(flood_num)
         sql = f'INSERT INTO reply (`post_id`, `flood_num`, `edit_count`, `time`, `context`, `author`) VALUES ({post_id}, {flood_num}, {edit_count}, "{time}", "{context}", "{author}");'
-        print(sql)
         cursor.execute(sql)
         self.db.commit()
 
@@ -60,7 +60,14 @@ class SQL:
         return results
 
     def update_post_state(self, post_id, state):
-        pass
+        # 1 正常 2 找不到这个主题  3 未通过审核 4 特殊 5 超时
+        cursor = self.db.cursor()
+        post_id = int(post_id)
+        sql = f'UPDATE post SET state={state} WHERE post_id={post_id};'
+
+        cursor.execute(sql)
+        # 提交到数据库执行
+        self.db.commit()
 
 
 if __name__ == '__main__':
