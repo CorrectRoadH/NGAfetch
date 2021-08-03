@@ -60,7 +60,7 @@ class SQL:
         return results
 
     def update_post_state(self, post_id, state):
-        # 1 正常 2 找不到这个主题  3 未通过审核 4 特殊 5 超时
+        # 1 正常 2 找不到这个主题  3 未通过审核 4 特殊 5 超时 6 账号权限不足
         cursor = self.db.cursor()
         post_id = int(post_id)
         sql = f'UPDATE post SET state={state} WHERE post_id={post_id};'

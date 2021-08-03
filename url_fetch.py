@@ -4,6 +4,7 @@ import re
 from config import cookies, random_sleep
 import utils.fetch
 import utils.User
+import utils.Log
 
 
 class UrlFetcher(multiprocessing.Process):
@@ -13,6 +14,7 @@ class UrlFetcher(multiprocessing.Process):
         self.queue = queue
 
     def run(self):
+        log = utils.Log.LogTool()
         user = utils.User.User()
 
         while True:
@@ -20,6 +22,7 @@ class UrlFetcher(multiprocessing.Process):
             try:
                 posts = re.findall(r'<a href=\'/read\.php\?tid=(.*)\' id=\'t_tt1_.*\' class=\'topic\'>.*</a>', r.text)
             except UnicodeDecodeError:
+                log.error("url fetch时遇到解码错误")
                 continue
 
             # print(posts)
@@ -27,6 +30,7 @@ class UrlFetcher(multiprocessing.Process):
                 if not utils.fetch.is_fetched(post):
                     self.queue.put(post)  # 直接传post的id,其实在这里获取到了post的title,这里直接传更好,但是为了结构好这只能这样
                     print(f'压入帖子{post}')
+                    log.info(f'压入帖子{post}')
                 else:
                     # print("重复")
                     pass

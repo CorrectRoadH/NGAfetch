@@ -8,6 +8,7 @@ import yappi
 from yappi import get_func_stats, COLUMNS_FUNCSTATS
 import os
 import sys
+import utils.Log
 
 
 def print_all(stats, out, limit=None):
