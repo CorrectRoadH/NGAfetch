@@ -20,4 +20,3 @@ def is_fetched(url):
         posts.append(url)
         save()
         return False
-

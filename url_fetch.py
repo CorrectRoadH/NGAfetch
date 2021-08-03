@@ -1,7 +1,7 @@
 import multiprocessing
 import httpx
 import re
-from config import cookies, random_sleep
+from config import random_sleep
 import utils.fetch
 import utils.User
 import utils.Log

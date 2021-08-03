@@ -1,9 +1,9 @@
 import multiprocessing
 import asyncio
 from WebFetch import fetch, update
-import utils.Queue
+import utils.SQL
 import time as T
-from config import random_sleep, random_sleep_short
+from config import random_sleep_short
 import yappi
 from yappi import get_func_stats, COLUMNS_FUNCSTATS
 import os
@@ -34,10 +34,11 @@ class Arranger(multiprocessing.Process):
         self.count = 0
 
     async def new_post(self):
+        sql = utils.SQL.SQL()
         start_time = T.time()
         u1, u2, u3, u4 = self.queue.get(), self.queue.get(), self.queue.get(), self.queue.get()
         print(f'取出帖子{u1} {u2} {u3} {u4}')
-        p1, p2, p3, p4 = await asyncio.gather(fetch(u1), fetch(u2), fetch(u3), fetch(u4),)
+        p1, p2, p3, p4 = await asyncio.gather(fetch(u1, sql), fetch(u2, sql), fetch(u3, sql), fetch(u4, sql),)
 
         posts = [p1, p2, p3, p4]
 
@@ -58,10 +59,11 @@ class Arranger(multiprocessing.Process):
         self.count += 4
 
     async def update_post(self):
+        sql = utils.SQL.SQL()
         if self.update_queue.qsize() >= 4:
             u1, u2, u3, u4 = self.update_queue.get(), self.update_queue.get(), self.update_queue.get(), self.update_queue.get()
             print(f'取出待更新帖子{u1} {u2} {u3} {u4}')
-            p1, p2, p3, p4 = await asyncio.gather(update(u1), update(u2), update(u3), update(u4),)
+            p1, p2, p3, p4 = await asyncio.gather(update(u1, sql), update(u2, sql), update(u3, sql), update(u4, sql),)
 
             posts = [p1, p2, p3, p4]
 
@@ -79,12 +81,13 @@ class Arranger(multiprocessing.Process):
             print("待更新的帖子太少")
 
     def update_post_quick(self):  # 紧急更新的帖子就不等什么了,直接tm的更新上.
+        sql = utils.SQL.SQL()
         url = self.update_queue_quick.get()
-        post = asyncio.run(update(url))
+        post = asyncio.run(update(url, sql))
 
         flag, url = post
         if flag == 1:
-            self.update_queue_quick.put(url)
+            self.update_queue_quick.put(url, sql)
         else:  # 当flag为0时是被锁了,并且应该没有为2的情况,除非敏感词被删了.
             pass
 
@@ -117,6 +120,3 @@ class Arranger(multiprocessing.Process):
             # returns all stats with sorting applied
 
             print_all(stats, sys.stdout, limit=10)
-
-
-

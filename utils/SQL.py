@@ -60,7 +60,7 @@ class SQL:
         return results
 
     def update_post_state(self, post_id, state):
-        # 1 正常 2 找不到这个主题  3 未通过审核 4 特殊 5 超时 6 账号权限不足
+        # 1 正常 2 找不到这个主题  3 未通过审核 4 特殊 5 超时 6 账号权限不足 7 帖子正等待审核
         cursor = self.db.cursor()
         post_id = int(post_id)
         sql = f'UPDATE post SET state={state} WHERE post_id={post_id};'
@@ -68,6 +68,45 @@ class SQL:
         cursor.execute(sql)
         # 提交到数据库执行
         self.db.commit()
+
+
+class TestSQL:  # 单元测试时用的sql
+    def __init__(self):
+        self.floods = {}
+        '''
+        {
+        postid:{
+                '0':['wq','ww']
+            }
+        }
+        '''
+        self.posts = {}
+
+    def insert(self, post_id, time, title):
+        post_id = str(post_id)
+        self.posts[post_id] = title
+        self.floods[post_id] = {}
+
+    def get_reply_num(self, post_id, flood_num):
+        post_id = str(post_id)
+
+        if str(flood_num) not in self.floods[post_id]:
+            return 0
+        return len(self.floods[post_id][str(flood_num)])
+
+    def update_reply(self, post_id, flood_num, time, context, author):
+        post_id = str(post_id)
+
+        if self.get_reply_num(post_id, flood_num) == 0:  # 这不是更新是新回复
+            self.floods[post_id][str(flood_num)] = [context]
+        else:
+            self.floods[post_id][str(flood_num)].append(context)
+
+    def get_reply_latest(self, post_id, flood_num):
+        pass
+
+    def update_post_state(self, post_id, state):
+        pass
 
 
 if __name__ == '__main__':

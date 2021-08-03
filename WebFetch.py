@@ -1,14 +1,14 @@
 import asyncio
 import httpx
 import re
-from config import cookies, random_sleep_short
+from config import random_sleep_short
 from text import is_will_be_deleted
 import utils.SQL
 import utils.User
 import utils.Log
 
 
-async def fetch(url):
+async def fetch(url, sql):
     log = utils.Log.LogTool()
     user = utils.User.User()
     # 打开网页
@@ -41,7 +41,7 @@ async def fetch(url):
         elif title[0] == "帖子审核未通过":  # 这种情况下连原来的数据都没有抓到也没有保存的必要了.
             return 0, url
         elif title[0] == "帐号权限不足":
-            return 0,url
+            return 0, url
         else:
             print(f"特殊情况!!!{title}")
             print(f'{url}帖子已经遇到gbk解析出错,已返回')
@@ -53,7 +53,6 @@ async def fetch(url):
         return 0, url
 
     print(f'标题:{title}')
-    sql = utils.SQL.SQL()
     sql.insert(url, None, title[0])
     #todo 这里要改一下,插入帖子的时候插入时间
     count = 1
@@ -116,7 +115,7 @@ async def fetch(url):
     return result
 
 
-async def update(url):
+async def update(url, sql):
     log = utils.Log.LogTool()
     user = utils.User.User()
 
@@ -124,7 +123,6 @@ async def update(url):
         r = await client.get(f"https://bbs.nga.cn/read.php?tid={url}", cookies=user.cookies, headers=user.header)
     # 解析
     # 处理帖子名
-    sql = utils.SQL.SQL()
 
     try:
         title = re.findall(r'<title>(.+) NGA玩家社区</title>', r.text)
