@@ -26,7 +26,23 @@ cookies=[{
 'ngaPassportCid':'X967qo45ubhuhd4vmbutgv0001mk5c9sv1t0pjdc',
 'lastvisit':'1627979955',
 'lastpath':'/thread.php?fid=-7',
-'bbsmisccookies':'%7B%22uisetting%22%3A%7B0%3A1%2C1%3A1635558459%7D%2C%22pv_count_for_insad%22%3A%7B0%3A-19%2C1%3A1628009893%7D%2C%22insad_views%22%3A%7B0%3A3%2C1%3A1628009893%7D%7D'    }]
+'bbsmisccookies':'%7B%22uisetting%22%3A%7B0%3A1%2C1%3A1635558459%7D%2C%22pv_count_for_insad%22%3A%7B0%3A-19%2C1%3A1628009893%7D%2C%22insad_views%22%3A%7B0%3A3%2C1%3A1628009893%7D%7D'
+},
+    {
+'HMF_CI':'6617e52955751ccd12818f8c8b429b37a4436ff18c0abdb2a6d6f6f5970a7f12db',
+'HMY_JC':'acd444cc73c7f827409e1d21de87d0304ed03cf3d31d1bd050e7303048fb571c58,',
+'ngaPassportOid':'1a2ce0e88976507a990899c2a5382962',
+'ngacn0comUserInfo':'LXHH%09LXHH%0939%0939%09%0910%090%094%090%090%09',
+'ngacn0comUserInfoCheck':'c4890ae757a997571f71adb1468d7038',
+'ngacn0comInfoCheckTime':'1627990132',
+'ngaPassportUid':'63446482',
+'ngaPassportUrlencodedUname':'LXHH',
+'ngaPassportCid':'X96dfm1jnlms8juk6enr3mst63nrnm6ncaipbddh',
+'lastvisit':'1627990139',
+'lastpath':'/read.php?tid=27871894',
+'bbsmisccookies':'%7B%22uisetting%22%3A%7B0%3A%22c%22%2C1%3A1627990437%7D%2C%22pv_count_for_insad%22%3A%7B0%3A-45%2C1%3A1628010110%7D%2C%22insad_views%22%3A%7B0%3A1%2C1%3A1628010110%7D%7D'
+    }
+]
 
 UA = ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36','Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15']
 
@@ -36,4 +52,8 @@ def random_sleep():
 
 
 def random_sleep_short():
-    time.sleep(random.uniform(1, 2.1))  # 这里配置延迟 现在是1到2.5秒的延迟.防止爬虫太快
+    time.sleep(random.uniform(1, 2))  # 这里配置延迟 现在是1到2.5秒的延迟.防止爬虫太快
+
+
+def random_sleep_very_short():
+    time.sleep(0.5)  # 这里配置延迟 现在是1到2.5秒的延迟.防止爬虫太快
