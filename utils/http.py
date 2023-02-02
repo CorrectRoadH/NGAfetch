@@ -22,4 +22,7 @@ async def get(url):  # 把get独立出来的问题就是访问出错之后不能
         except httpx.ProxyError:
             print(f"{url} 访问 代理错误,重新访问")
             continue
+        except httpx.ReadTimeout:
+            print(f"{url} 读取超时,重新访问")
+            continue  # 本来是出错是用异步的方法重新访问,但是这里没有办法了直接访问
     return r

@@ -14,9 +14,14 @@ async def fetch(url, sql):
 
     # 解析
     # 处理帖子名
-    state, title = utils.analysis.judge_post_state(r.text)
+    try:
+        state, title = utils.analysis.judge_post_state(r.text)
+    except UnicodeDecodeError:
+        print("看这里!!!!解码错误", r)
+        return 2, url
+
     # 0 请更新 1 正常 2 找不到这个主题  3 未通过审核 4 特殊 5 超时 6 账号权限不足 7 帖子正等待审核
-    if state == 0:
+    if state == 0: # 本来在get_state是有解码错误的,但是反应过来是在r.text这里出错的.所以改了.
         return 2, url
     else:
         if state != 1:  # 如果不等于1也不等于0 就是帖子有事了,直接放弃了
@@ -53,11 +58,13 @@ async def fetch(url, sql):
 
         for flood in floods:
             flood_num, context, time, author = utils.analysis.analysis_flood_context(flood)
+            if time == author == 0:
+                return 2, url
             # 敏感词匹配
             flag = True if is_will_be_deleted(context[0]) else flag
-
             sql.update_reply(url, flood_num[0], time[0], context[0], author[0])
             # 这里可以新建一个api,inster而不是update,这样inster就不用查询了
+
 
             last_floods = floods
         count += 1
@@ -79,9 +86,6 @@ async def update(url, sql):
         title = re.findall(r'<title>(.+) NGA玩家社区</title>', r.text)
     except UnicodeDecodeError:
         print(f'标题 {url}帖子已经遇到gbk解析出错,已返回')
-        log.error(f'{url}帖子已经遇到gbk解析出错,已返回')
-        with open('test.txt', 'a+') as f:
-            f.write(r.text)
         return 2, url
 
     if not title:  # 判断被锁与特殊情况.
@@ -138,6 +142,8 @@ async def update(url, sql):
             if "<h4 class='silver subtitle'>改动</h4>" in flood:  # 说明这一层有改动
 
                 flood_num, context, time, author = utils.analysis.analysis_flood_context(flood)
+                if time == author == 0:
+                    return 2, url
 
                 # 敏感词匹配
                 flag = True if is_will_be_deleted(context) else flag
